@@ -1,0 +1,6 @@
+.env
+databricks.yml
+
+.databricks
+*.egg-info
+*__pycache__

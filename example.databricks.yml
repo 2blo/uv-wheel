@@ -1,0 +1,69 @@
+bundle:
+  name: example
+
+variables:
+  policy_id:
+    type: string
+    default: "policy_id"
+  admin_app_id:
+    type: string
+    default: "admin_app_id"
+  app_id:
+    type: string
+    default: "app_id"
+  team:
+    type: string
+    default: "team"
+  workspace_host:
+    type: string
+    default: "workspace_host"
+
+artifacts:
+  example:
+    type: whl
+    build: uv build
+    path: . # to pyproject
+
+targets:
+  dev:
+    mode: development
+    default: true
+
+workspace:
+  host: ${var.workspace_host}
+
+resources:
+  jobs:
+    example:
+      name: example_whl
+      tasks:
+        - notebook_task:
+            notebook_path: example_notebook.py
+          task_key: example_notebook
+          libraries:
+            - requirements: /Workspace${workspace.file_path}/requirements.txt
+            - whl: ./dist/*.whl
+          job_cluster_key: example
+      job_clusters:
+        - job_cluster_key: example
+          new_cluster:
+            cluster_name: ""
+            spark_version: 15.4.x-scala2.12
+            spark_conf:
+              spark.databricks.io.cache.enabled: "true"
+            azure_attributes:
+              first_on_demand: 1
+              availability: ON_DEMAND_AZURE
+              spot_bid_max_price: -1
+            node_type_id: Standard_D4as_v5
+            custom_tags:
+              admin-appid: ${var.admin_app_id}
+              Team: ${var.team}
+              custom-owner-appid: ${var.app_id}
+            enable_elastic_disk: true
+            policy_id: ${var.policy_id}
+            data_security_mode: SINGLE_USER
+            runtime_engine: STANDARD
+            autoscale:
+              min_workers: 1
+              max_workers: 1
