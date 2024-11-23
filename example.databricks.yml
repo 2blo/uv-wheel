@@ -14,14 +14,16 @@ variables:
   team:
     type: string
     default: "team"
-  workspace_host:
-    type: string
-    default: "workspace_host"
 
 artifacts:
   example:
     type: whl
-    build: uv build
+    build: >
+      uv export --group databricks-15-4 --group deutils --no-emit-package deutils --no-dev --format requirements-txt --output-file requirements.txt --no-hashes --no-editable --no-emit-project &&
+      uv build &&
+      uv export --only-group deutils --format requirements-txt --output-file ./dist/deutils.requirements.txt --no-hashes --no-editable --no-emit-project &&
+      python -m pip wheel -w dist -r ./dist/deutils.requirements.txt --no-deps &&
+      find dist -type f ! -name "deutils*.whl" ! -name "uv_wheel*.whl" -delete
     path: . # to pyproject
 
 targets:
@@ -30,7 +32,7 @@ targets:
     default: true
 
 workspace:
-  host: ${var.workspace_host}
+  host: __PLACEHOLDER__
 
 resources:
   jobs:
@@ -41,8 +43,9 @@ resources:
             notebook_path: example_notebook.py
           task_key: example_notebook
           libraries:
+            - whl: ./dist/uv_wheel*.whl
+            - whl: ./dist/deutils*.whl
             - requirements: /Workspace${workspace.file_path}/requirements.txt
-            - whl: ./dist/*.whl
           job_cluster_key: example
       job_clusters:
         - job_cluster_key: example
