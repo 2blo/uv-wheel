@@ -4,3 +4,4 @@ databricks.yml
 .databricks
 *.egg-info
 *__pycache__
+pip_dist
